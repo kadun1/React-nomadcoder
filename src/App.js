@@ -1,36 +1,53 @@
-import Button from "./Button";
-import styles from "./App.module.css";
 import { useState, useEffect, useLayoutEffect } from "react";
-import { func } from "prop-types";
 
 function App() {
-  const [toDo, setToDo] = useState("");
-  const [toDos, setToDos] = useState([]);
-  const onChange = (event) => setToDo(event.target.value);
-  const onSubmit = (event) => {
-    event.preventDefault();
-    if (toDo === "") {
-      return;
-    }
-    setToDo("");
-    setToDos((currentArray) => [...currentArray, toDo]);
+  const [loading, setLoading] = useState(true);
+  const [coins, setCoins] = useState([]);
+  const [cost, setCost] = useState(1);
+  const [selected, setSelected] = useState(1);
+  useEffect(() => {
+    fetch("https://api.coinpaprika.com/v1/tickers").then((response) =>
+      response.json().then((json) => {
+        setCoins(json);
+        setLoading(false);
+      })
+    );
+  }, []);
+  const inputVal = (event) => {
+    setCost(event.target.value);
+  };
+  const selectedVal = (event) => {
+    setSelected(event.target.value);
+    setCost(1);
   };
   return (
     <div>
-      <h1>My To Dos ({toDos.length})</h1>
-      <form onSubmit={onSubmit}>
-        <input
-          onChange={onChange}
-          value={toDo}
-          type="text"
-          placeholder="Write your to do..."
-        ></input>
-        <button>Add To Do</button>
-      </form>
-      <hr />
-      {toDos.map((item, index) => (
-        <li key={index}>{item}</li>
-      ))}
+      <h1>The Coins! {loading ? "" : `(${coins.length})`}</h1>
+      {loading ? (
+        <strong>Loading...</strong>
+      ) : (
+        <div>
+          <select
+            className="sel"
+            onChange={selectedVal}
+            style={{ display: "block" }}
+          >
+            <option>Select Coin!!</option>
+            {coins.map((coin, index) => (
+              <option key={index} value={coin.quotes.USD.price}>
+                {coin.name}({coin.symbol}): ${coin.quotes.USD.price} USD
+              </option>
+            ))}
+          </select>
+          <input
+            type="number"
+            value={cost}
+            onChange={inputVal}
+            placeholder={"입력"}
+          />
+          $<h2>You Can get {cost / selected}</h2>
+        </div>
+      )}
     </div>
   );
 }
